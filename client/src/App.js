@@ -87,7 +87,7 @@ function App() {
 
     setLoading(true);
     try {
-      const res = await axios.post("https://auto-shorts-32b7.onrender.com/preview-voice", formData, { responseType: 'blob' });
+      const res = await axios.post("https://auto-shorts-32b7.onrender.com/generate",", formData, { responseType: 'blob' });
       const url = URL.createObjectURL(new Blob([res.data]));
       setResultUrl(url);
     } catch (err) {
