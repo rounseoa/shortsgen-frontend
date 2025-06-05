@@ -1,3 +1,4 @@
+// ✅ 쇼츠메이커 App.js 고급버전 (상단 텍스트 스타일 + 프리뷰 포함)
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
@@ -10,6 +11,7 @@ const COLOR_OPTIONS = [
 ];
 const FONT_SIZES = ['30', '40', '50', '60', '70'];
 const POSITIONS = ['상', '중', '하'];
+const TITLE_POSITIONS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 const EDGE_KR_VOICES = [
   { label: "SunHi (여성)", value: "ko-KR-SunHiNeural" },
   { label: "InJoon (남성)", value: "ko-KR-InJoonNeural" }
@@ -20,6 +22,10 @@ function App() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [views, setViews] = useState("");
+  const [titleSize, setTitleSize] = useState("40");
+  const [titleColor, setTitleColor] = useState("white");
+  const [titlePosition, setTitlePosition] = useState("1");
+
   const [image, setImage] = useState(null);
   const [ttsEngine, setTtsEngine] = useState("gtts");
   const [edgeVoice, setEdgeVoice] = useState("ko-KR-SunHiNeural");
@@ -81,6 +87,9 @@ function App() {
     formData.append("title", title);
     formData.append("author", author);
     formData.append("views", views);
+    formData.append("titleSize", titleSize);
+    formData.append("titleColor", titleColor);
+    formData.append("titlePosition", titlePosition);
 
     blocks.forEach(b => {
       formData.append("texts", b.text);
@@ -107,13 +116,22 @@ function App() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">🎬 쇼츠메이커 고급버전</h1>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <input className="p-2 border" placeholder="📌 제목" value={title} onChange={e => setTitle(e.target.value)} />
         <input className="p-2 border" placeholder="👤 작성자" value={author} onChange={e => setAuthor(e.target.value)} />
         <input className="p-2 border" placeholder="👁 조회수" value={views} onChange={e => setViews(e.target.value)} />
+        <select className="p-2 border" value={titleSize} onChange={e => setTitleSize(e.target.value)}>
+          {FONT_SIZES.map(f => <option key={f} value={f}>{f}px</option>)}
+        </select>
+        <select className="p-2 border" value={titleColor} onChange={e => setTitleColor(e.target.value)}>
+          {COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}
+        </select>
+        <select className="p-2 border" value={titlePosition} onChange={e => setTitlePosition(e.target.value)}>
+          {TITLE_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
         <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0])} />
       </div>
 
