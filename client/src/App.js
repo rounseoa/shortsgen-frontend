@@ -1,3 +1,4 @@
+// ✅ App.js 최종 통합버전 (썰메이커 UI + 상단 스타일 입력 + TTS 미리듣기 text 포함)
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
@@ -10,6 +11,7 @@ const COLOR_OPTIONS = [
 ];
 const POSITIONS = ['상', '중', '하'];
 const FONT_SIZES = ['30', '40', '50', '60', '70'];
+const TITLE_POSITIONS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 const EDGE_KR_VOICES = [
   { label: "SunHi (여성)", value: "ko-KR-SunHiNeural" },
   { label: "InJoon (남성)", value: "ko-KR-InJoonNeural" }
@@ -20,12 +22,15 @@ function App() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [views, setViews] = useState("");
+  const [titleSize, setTitleSize] = useState("40");
+  const [titleColor, setTitleColor] = useState("white");
+  const [titlePosition, setTitlePosition] = useState("1");
   const [image, setImage] = useState(null);
   const [ttsEngine, setTtsEngine] = useState("gtts");
   const [edgeVoice, setEdgeVoice] = useState("ko-KR-SunHiNeural");
-  const [loading, setLoading] = useState(false);
-  const [resultUrl, setResultUrl] = useState(null);
   const [exampleAudio, setExampleAudio] = useState(null);
+  const [resultUrl, setResultUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   function createBlock() {
     return {
@@ -81,9 +86,9 @@ function App() {
     formData.append("title", title);
     formData.append("author", author);
     formData.append("views", views);
-    formData.append("titleSize", "40");
-    formData.append("titleColor", "white");
-    formData.append("titlePosition", "1");
+    formData.append("titleSize", titleSize);
+    formData.append("titleColor", titleColor);
+    formData.append("titlePosition", titlePosition);
 
     blocks.forEach(b => {
       formData.append("texts", b.text);
@@ -110,50 +115,43 @@ function App() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">🧠 AI 썰메이커 고급</h1>
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <h1 className="text-2xl font-bold">🎬 쇼츠메이커 최종</h1>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <input className="p-2 border rounded" placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} />
-        <input className="p-2 border rounded" placeholder="작성자" value={author} onChange={e => setAuthor(e.target.value)} />
-        <input className="p-2 border rounded" placeholder="조회수" value={views} onChange={e => setViews(e.target.value)} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <input className="p-2 border" placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} />
+        <input className="p-2 border" placeholder="작성자" value={author} onChange={e => setAuthor(e.target.value)} />
+        <input className="p-2 border" placeholder="조회수" value={views} onChange={e => setViews(e.target.value)} />
+        <select className="p-2 border" value={titleSize} onChange={e => setTitleSize(e.target.value)}>{FONT_SIZES.map(f => <option key={f} value={f}>{f}px</option>)}</select>
+        <select className="p-2 border" value={titleColor} onChange={e => setTitleColor(e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
+        <select className="p-2 border" value={titlePosition} onChange={e => setTitlePosition(e.target.value)}>{TITLE_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}</select>
         <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0])} />
       </div>
 
-      <div className="p-4 bg-gray-50 border rounded">
-        <h2 className="font-semibold mb-2">🎙 음성 설정</h2>
+      <div className="bg-gray-50 border p-4 rounded">
+        <h2 className="font-semibold mb-2">🎙 TTS 설정</h2>
         <select value={ttsEngine} onChange={e => setTtsEngine(e.target.value)} className="border p-2 mr-2">
           <option value="gtts">gTTS</option>
           <option value="edge">Edge TTS</option>
         </select>
-        {ttsEngine === 'edge' && (
+        {ttsEngine === "edge" && (
           <select value={edgeVoice} onChange={e => setEdgeVoice(e.target.value)} className="border p-2">
-            {EDGE_KR_VOICES.map(v => (
-              <option key={v.value} value={v.value}>{v.label}</option>
-            ))}
+            {EDGE_KR_VOICES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
           </select>
         )}
       </div>
 
       {blocks.map((b, i) => (
-        <div key={b.id} className="border rounded p-4 mb-4 bg-white shadow">
-          <div className="font-bold mb-2">🟪 줄 {i + 1}</div>
+        <div key={b.id} className="border p-4 mb-6 bg-white rounded shadow">
+          <div className="font-bold mb-2">줄 {i + 1}</div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
             <input className="p-2 border" placeholder="자막 텍스트" value={b.text} onChange={e => handleBlockChange(i, "text", e.target.value)} />
-            <input className="p-2 border" placeholder="시작시간" value={b.start} onChange={e => handleBlockChange(i, "start", e.target.value)} />
-            <input className="p-2 border" placeholder="지속시간" value={b.duration} onChange={e => handleBlockChange(i, "duration", e.target.value)} />
-            <select className="p-2 border" value={b.position} onChange={e => handleBlockChange(i, "position", e.target.value)}>
-              {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            <select className="p-2 border" value={b.fontSize} onChange={e => handleBlockChange(i, "fontSize", e.target.value)}>
-              {FONT_SIZES.map(f => <option key={f} value={f}>{f}px</option>)}
-            </select>
-            <select className="p-2 border" value={b.fontColor} onChange={e => handleBlockChange(i, "fontColor", e.target.value)}>
-              {COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}
-            </select>
-            <select className="p-2 border" value={b.bgColor} onChange={e => handleBlockChange(i, "bgColor", e.target.value)}>
-              {COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}
-            </select>
+            <input className="p-2 border" placeholder="시작시간(초)" value={b.start} onChange={e => handleBlockChange(i, "start", e.target.value)} />
+            <input className="p-2 border" placeholder="지속시간(초)" value={b.duration} onChange={e => handleBlockChange(i, "duration", e.target.value)} />
+            <select className="p-2 border" value={b.position} onChange={e => handleBlockChange(i, "position", e.target.value)}>{POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}</select>
+            <select className="p-2 border" value={b.fontSize} onChange={e => handleBlockChange(i, "fontSize", e.target.value)}>{FONT_SIZES.map(f => <option key={f} value={f}>{f}px</option>)}</select>
+            <select className="p-2 border" value={b.fontColor} onChange={e => handleBlockChange(i, "fontColor", e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
+            <select className="p-2 border" value={b.bgColor} onChange={e => handleBlockChange(i, "bgColor", e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={b.bold === "true"} onChange={e => handleBlockChange(i, "bold", e.target.checked ? "true" : "false")} />
               굵게
@@ -180,7 +178,7 @@ function App() {
       {resultUrl && (
         <div className="mt-6">
           <video src={resultUrl} controls className="w-full" />
-          <a href={resultUrl} download="shorts.mp4" className="text-blue-600 underline block mt-2">🎞 결과 다운로드</a>
+          <a href={resultUrl} download="shorts.mp4" className="text-blue-600 underline block mt-2">🎞 결과 영상 다운로드</a>
         </div>
       )}
     </div>
