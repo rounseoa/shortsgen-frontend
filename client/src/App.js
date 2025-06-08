@@ -1,4 +1,4 @@
-// ✅ App.js 최신버전: 고정 배경 + 줄별 이미지 업로드 반영
+// ✅ App.js (프리셋 저장/불러오기 + Bold 기능 포함)
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
@@ -67,6 +67,29 @@ function App() {
     }
   };
 
+  const savePreset = () => {
+    const preset = {
+      title, author, views, titleSize, titleColor, titlePosition,
+      blocks
+    };
+    localStorage.setItem("shorts_preset", JSON.stringify(preset));
+    alert("🎉 프리셋이 저장되었습니다!");
+  };
+
+  const loadPreset = () => {
+    const saved = localStorage.getItem("shorts_preset");
+    if (!saved) return alert("저장된 프리셋이 없습니다.");
+    const preset = JSON.parse(saved);
+    setTitle(preset.title || "");
+    setAuthor(preset.author || "");
+    setViews(preset.views || "");
+    setTitleSize(preset.titleSize || "40");
+    setTitleColor(preset.titleColor || "white");
+    setTitlePosition(preset.titlePosition || "1");
+    setBlocks(preset.blocks || [createBlock()]);
+    alert("📂 프리셋이 불러와졌습니다!");
+  };
+
   const handleSubmit = async () => {
     if (!background || blocks.some(b => !b.text)) {
       alert("배경 이미지 및 자막 내용을 모두 입력하세요.");
@@ -123,17 +146,9 @@ function App() {
         <input type="file" accept="image/*" onChange={e => setBackground(e.target.files[0])} />
       </div>
 
-      <div className="bg-gray-50 border p-4 rounded">
-        <h2 className="font-semibold mb-2">🎙 TTS 설정</h2>
-        <select value={ttsEngine} onChange={e => setTtsEngine(e.target.value)} className="border p-2 mr-2">
-          <option value="gtts">gTTS</option>
-          <option value="edge">Edge TTS</option>
-        </select>
-        {ttsEngine === "edge" && (
-          <select value={edgeVoice} onChange={e => setEdgeVoice(e.target.value)} className="border p-2">
-            {EDGE_KR_VOICES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
-          </select>
-        )}
+      <div className="flex gap-4">
+        <button onClick={savePreset} className="px-4 py-2 bg-green-100 rounded">💾 프리셋 저장</button>
+        <button onClick={loadPreset} className="px-4 py-2 bg-blue-100 rounded">📂 프리셋 불러오기</button>
       </div>
 
       {blocks.map((b, i) => (
@@ -148,6 +163,10 @@ function App() {
             <select className="p-2 border" value={b.fontColor} onChange={e => handleBlockChange(i, "fontColor", e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
             <select className="p-2 border" value={b.bgColor} onChange={e => handleBlockChange(i, "bgColor", e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
             <input type="file" accept="image/*" onChange={e => handleBlockChange(i, "image", e.target.files[0])} />
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={b.bold === "true"} onChange={e => handleBlockChange(i, "bold", e.target.checked ? "true" : "false")} />
+              굵게
+            </label>
             <button onClick={() => handlePreviewTTS(b.text)} className="px-3 py-1 bg-blue-100 text-sm text-blue-800 rounded">🔉 미리듣기</button>
           </div>
         </div>
