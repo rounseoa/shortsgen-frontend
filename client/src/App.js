@@ -1,4 +1,4 @@
-// ✅ App.js 최종 통합버전 (썰메이커 UI + 상단 스타일 입력 + TTS 미리듣기 text 포함)
+// ✅ App.js 최신버전: 고정 배경 + 줄별 이미지 업로드 반영
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
@@ -11,7 +11,7 @@ const COLOR_OPTIONS = [
 ];
 const POSITIONS = ['상', '중', '하'];
 const FONT_SIZES = ['30', '40', '50', '60', '70'];
-const TITLE_POSITIONS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+const TITLE_POSITIONS = ['1','2','3','4','5','6','7','8','9','10'];
 const EDGE_KR_VOICES = [
   { label: "SunHi (여성)", value: "ko-KR-SunHiNeural" },
   { label: "InJoon (남성)", value: "ko-KR-InJoonNeural" }
@@ -25,7 +25,7 @@ function App() {
   const [titleSize, setTitleSize] = useState("40");
   const [titleColor, setTitleColor] = useState("white");
   const [titlePosition, setTitlePosition] = useState("1");
-  const [image, setImage] = useState(null);
+  const [background, setBackground] = useState(null);
   const [ttsEngine, setTtsEngine] = useState("gtts");
   const [edgeVoice, setEdgeVoice] = useState("ko-KR-SunHiNeural");
   const [exampleAudio, setExampleAudio] = useState(null);
@@ -34,23 +34,17 @@ function App() {
 
   function createBlock() {
     return {
-      id: uuidv4(),
-      text: '',
-      start: '0',
-      duration: '2',
-      position: '중',
-      fontSize: '40',
-      fontColor: 'white',
-      bgColor: 'black',
-      bold: 'false'
+      id: uuidv4(), text: '', start: '0', duration: '2',
+      position: '중', fontSize: '40', fontColor: 'white',
+      bgColor: 'black', bold: 'false', image: null
     };
   }
 
   const handleBlockChange = (index, key, value) => {
     setBlocks(prev => {
-      const copy = [...prev];
-      copy[index][key] = value;
-      return copy;
+      const updated = [...prev];
+      updated[index][key] = value;
+      return updated;
     });
   };
 
@@ -68,19 +62,19 @@ function App() {
       }, { responseType: 'blob' });
       const url = URL.createObjectURL(res.data);
       setExampleAudio(url);
-    } catch (err) {
+    } catch {
       alert("미리듣기 실패");
     }
   };
 
   const handleSubmit = async () => {
-    if (!image || blocks.some(b => !b.text)) {
-      alert("이미지와 자막을 입력하세요.");
+    if (!background || blocks.some(b => !b.text)) {
+      alert("배경 이미지 및 자막 내용을 모두 입력하세요.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("image", image);
+    formData.append("background", background);
     formData.append("voiceEngine", ttsEngine);
     formData.append("edgeVoice", edgeVoice);
     formData.append("title", title);
@@ -99,6 +93,7 @@ function App() {
       formData.append("fontColors", b.fontColor);
       formData.append("bgColors", b.bgColor);
       formData.append("bolds", b.bold);
+      if (b.image) formData.append("images", b.image);
     });
 
     setLoading(true);
@@ -116,7 +111,7 @@ function App() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">🎬 쇼츠메이커 최종</h1>
+      <h1 className="text-2xl font-bold">🎬 쇼츠메이커 고급버전</h1>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <input className="p-2 border" placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} />
@@ -125,7 +120,7 @@ function App() {
         <select className="p-2 border" value={titleSize} onChange={e => setTitleSize(e.target.value)}>{FONT_SIZES.map(f => <option key={f} value={f}>{f}px</option>)}</select>
         <select className="p-2 border" value={titleColor} onChange={e => setTitleColor(e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
         <select className="p-2 border" value={titlePosition} onChange={e => setTitlePosition(e.target.value)}>{TITLE_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}</select>
-        <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0])} />
+        <input type="file" accept="image/*" onChange={e => setBackground(e.target.files[0])} />
       </div>
 
       <div className="bg-gray-50 border p-4 rounded">
@@ -152,10 +147,7 @@ function App() {
             <select className="p-2 border" value={b.fontSize} onChange={e => handleBlockChange(i, "fontSize", e.target.value)}>{FONT_SIZES.map(f => <option key={f} value={f}>{f}px</option>)}</select>
             <select className="p-2 border" value={b.fontColor} onChange={e => handleBlockChange(i, "fontColor", e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
             <select className="p-2 border" value={b.bgColor} onChange={e => handleBlockChange(i, "bgColor", e.target.value)}>{COLOR_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}</select>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={b.bold === "true"} onChange={e => handleBlockChange(i, "bold", e.target.checked ? "true" : "false")} />
-              굵게
-            </label>
+            <input type="file" accept="image/*" onChange={e => handleBlockChange(i, "image", e.target.files[0])} />
             <button onClick={() => handlePreviewTTS(b.text)} className="px-3 py-1 bg-blue-100 text-sm text-blue-800 rounded">🔉 미리듣기</button>
           </div>
         </div>
